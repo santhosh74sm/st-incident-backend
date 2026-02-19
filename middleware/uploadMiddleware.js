@@ -1,17 +1,26 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Storage configuration
+// 1. 'uploads' போல்டரைத் துல்லியமாக உருவாக்கவும்
+const uploadDir = path.join(__dirname, '..', 'uploads'); // backend/uploads போல்டர்
+
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('✅ Uploads folder ensured at:', uploadDir);
+}
+
+// 2. Storage configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Make sure 'uploads' folder exists in your backend root
+        cb(null, uploadDir); // துல்லியமான பாத் (Absolute Path)
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
     }
 });
 
-// File filter to allow Images AND Excel
+// 3. File filter
 const fileFilter = (req, file, cb) => {
     const allowedFileTypes = [
         'image/jpeg', 
@@ -24,14 +33,14 @@ const fileFilter = (req, file, cb) => {
     if (allowedFileTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only Images and Excel files are allowed!'), false);
+        cb(new Error('Invalid file type!'), false);
     }
 };
 
 const upload = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB Limit
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
 module.exports = upload;
